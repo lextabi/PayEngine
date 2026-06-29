@@ -1,44 +1,6 @@
-import { PrismaClient, GovernmentAgency, HolidayType, RuleStatus, SettingValueType } from "@prisma/client";
+import { PrismaClient, GovernmentAgency, HolidayType, RuleStatus } from "@prisma/client";
 
 const prisma = new PrismaClient();
-
-const companySettings = [
-  {
-    key: "company_name",
-    name: "Company Name",
-    description: "Display name used in payroll outputs and payslips.",
-    value: "PayEngine Demo Company",
-    valueType: SettingValueType.STRING,
-  },
-  {
-    key: "country_code",
-    name: "Country Code",
-    description: "Primary country where payroll rules apply.",
-    value: "PH",
-    valueType: SettingValueType.STRING,
-  },
-  {
-    key: "currency_code",
-    name: "Currency Code",
-    description: "Default currency for payroll calculations.",
-    value: "PHP",
-    valueType: SettingValueType.STRING,
-  },
-  {
-    key: "timezone",
-    name: "Timezone",
-    description: "Default timezone for attendance and payroll cutoffs.",
-    value: "Asia/Manila",
-    valueType: SettingValueType.STRING,
-  },
-  {
-    key: "default_pay_schedule",
-    name: "Default Pay Schedule",
-    description: "Default payroll cycle used for new payroll batches.",
-    value: "SEMI_MONTHLY",
-    valueType: SettingValueType.STRING,
-  },
-];
 
 const governmentRules = [
   {
@@ -89,19 +51,6 @@ const holidayRules = [
 ];
 
 async function main() {
-  for (const setting of companySettings) {
-    await prisma.companySetting.upsert({
-      where: { key: setting.key },
-      update: {
-        name: setting.name,
-        description: setting.description,
-        value: setting.value,
-        valueType: setting.valueType,
-      },
-      create: setting,
-    });
-  }
-
   for (const rule of governmentRules) {
     await prisma.governmentRule.upsert({
       where: { code: rule.code },

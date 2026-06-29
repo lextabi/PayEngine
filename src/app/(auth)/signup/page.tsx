@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 
-import { LoginForm } from "@/features/auth/components/login-form";
+import { SignupForm } from "@/features/auth/components/signup-form";
 import { getSessionUser } from "@/features/auth/services/session.service";
 
-export default async function LoginPage() {
+export default async function SignupPage() {
   const user = await getSessionUser();
 
   if (user) {
@@ -18,14 +18,14 @@ export default async function LoginPage() {
             PayEngine
           </p>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Sign in to your account
+            Create your account
           </h1>
           <p className="text-muted-foreground text-sm">
-            Continue to your personal payroll calculator workspace.
+            Sign up with your email and verify it to start using your personal payroll calculator.
           </p>
         </div>
 
-        <LoginForm />
+        <SignupForm />
       </section>
     </main>
   );

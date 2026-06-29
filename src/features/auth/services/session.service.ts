@@ -1,10 +1,7 @@
 import { cache } from "react";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { AppRole, AuthUser } from "@/types/auth";
-import { getOrCreateUserRole } from "@/features/auth/services/role.service";
-
-const DEFAULT_UNAUTHORIZED_ROLE: AppRole = "EMPLOYEE";
+import type { AuthUser } from "@/types/auth";
 
 const getSessionUserInternal = cache(async (): Promise<AuthUser | null> => {
   const supabase = await createSupabaseServerClient();
@@ -16,18 +13,9 @@ const getSessionUserInternal = cache(async (): Promise<AuthUser | null> => {
     return null;
   }
 
-  let role: AppRole = DEFAULT_UNAUTHORIZED_ROLE;
-
-  try {
-    role = await getOrCreateUserRole(user.id, user.email);
-  } catch {
-    // Keep auth session usable even if role bootstrap storage is unavailable.
-  }
-
   return {
     id: user.id,
     email: user.email,
-    role,
   };
 });
 

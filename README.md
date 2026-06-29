@@ -1,8 +1,6 @@
 # PayEngine
 
-PayEngine is a configurable payroll engine designed to replace spreadsheet-based payroll workflows with a production-quality web platform.
-
-This repository currently contains **Phase 3: Database Design**.
+PayEngine is a personal payroll calculator web app. Each user manages their own account, settings, and payroll simulations.
 
 ## Stack
 
@@ -21,20 +19,20 @@ This repository currently contains **Phase 3: Database Design**.
 
 ```text
 src/
-	app/                    # App Router entrypoints and layouts
-	components/
-		ui/                   # shadcn/ui components
-	config/                 # environment and runtime configuration
-	features/               # feature modules (auth, employees, payroll)
-	lib/
-		db/                   # database clients/adapters
-		supabase/             # supabase browser/server clients
-		validations/          # shared validation schemas
-	server/
-		actions/              # server actions
-	types/                  # cross-feature shared types
+app/                    # App Router entrypoints and layouts
+components/
+ui/                   # shared UI components
+config/                 # environment and runtime configuration
+features/               # feature modules (auth, payroll, settings, dashboard)
+lib/
+db/                   # database clients/adapters
+supabase/             # supabase browser/server clients
+validations/          # shared validation schemas
+server/
+actions/              # server actions
+types/                  # cross-feature shared types
 prisma/
-	schema.prisma           # prisma schema and datasource config
+schema.prisma           # prisma schema and datasource config
 ```
 
 ## Prerequisites
@@ -55,6 +53,7 @@ Required variables:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `DATABASE_URL`
 - `DIRECT_URL` (optional but recommended)
+- `NEXT_PUBLIC_APP_URL` (recommended for auth redirect links)
 
 ## Run Locally
 
@@ -81,35 +80,7 @@ Open `http://localhost:3000`.
 - `npm run db:push` - push schema to database
 - `npm run db:seed` - seed baseline configuration data
 
-## Supabase Connectivity Check
-
-After setting `.env`, validate DB connectivity with:
-
-```bash
-npm run prisma:generate
-npx prisma db pull
-```
-
-If credentials are correct, Prisma introspection should complete successfully.
-
-## Current Status
-
-- [x] Next.js app initialized with App Router
-- [x] Tailwind configured
-- [x] shadcn/ui configured
-- [x] Prisma configured for PostgreSQL
-- [x] Supabase client scaffolding added
-- [x] Feature-based folder structure added
-- [x] ESLint + Prettier configured
-- [x] Login and logout flow implemented
-- [x] Protected routes with middleware implemented
-- [x] Session-based redirects implemented
-- [x] Future-ready role scaffolding added
-- [x] Core payroll database schema modeled
-- [x] Seed script for baseline configuration added
-- [x] Database design documentation added
-
-## Authentication Setup (Phase 2)
+## Authentication Setup
 
 ### 1) Supabase Auth Configuration
 
@@ -117,10 +88,12 @@ In Supabase Dashboard:
 
 1. Go to **Authentication > URL Configuration**.
 2. Set **Site URL** to your app URL:
-	- Local: `http://localhost:3000`
+   - Local: `http://localhost:3000`
 3. Add **Redirect URLs**:
-	- `http://localhost:3000/login`
-	- `http://localhost:3000/dashboard`
+   - `http://localhost:3000/login`
+   - `http://localhost:3000/signup`
+   - `http://localhost:3000/verify-email`
+   - `http://localhost:3000/dashboard`
 
 ### 2) API Keys and Environment
 
@@ -135,64 +108,57 @@ From **Project Settings > Database**, copy connection strings for:
 - `DATABASE_URL`
 - `DIRECT_URL`
 
-Set `AUTH_ADMIN_EMAILS` to one or more comma-separated emails that should default to ADMIN role on first login.
+### 3) Database Support Tables
 
-### 3) Database Role Table Setup
-
-Run [supabase/phase-2-auth.sql](supabase/phase-2-auth.sql) in Supabase SQL Editor.
+Run `supabase/auth-setup.sql` in Supabase SQL Editor.
 
 This creates:
 
-- `public.app_role` enum
-- `public.user_roles` table
-- trigger for `updated_at`
-- RLS policies for authenticated users and service role
+- auth support policies and supporting SQL objects used by Supabase auth setup
 
-### 4) Prisma Sync
+## Database Scope
 
-After SQL is applied and env vars are set:
+The application uses these core tables:
 
-```bash
-npm run prisma:generate
-```
-
-## Database Design (Phase 3)
-
-The Phase 3 schema adds the following core models:
-
-- `employees`
-- `payrolls`
-- `payroll_details`
 - `government_rules`
 - `government_tables`
-- `leave_credits`
 - `holiday_rules`
-- `attendances`
-- `allowances`
-- `deductions`
-- `company_settings`
-- `audit_logs`
+- `user_settings`
 
-Supporting documentation is available in [docs/phase-3-database-design.md](docs/phase-3-database-design.md).
+## Current Status
 
-### Seed Strategy
+- [x] Login and logout flow implemented
+- [x] Self-signup and verify-email flow added
+- [x] Protected routes with middleware implemented
+- [x] Session-based redirects implemented
+- [x] Personal payroll preview calculator added
+- [x] User-scoped payroll settings added
+- [x] Manual contribution override controls added (SSS/PhilHealth/Pag-IBIG)
+- [x] Tax is always computed automatically from the INCOME_TAX rule table
+- [x] Dashboard and navigation updated for personal workflow
 
-The seed script creates baseline editable configuration records only:
+## Personal Workflow Routes
 
-- company settings
-- government rule containers
-- holiday rule containers
+- `/signup` - self-registration form
+- `/verify-email` - post-signup verification prompt
+- `/login` - sign in
+- `/dashboard` - personal overview
+- `/payroll` - personal payroll calculator
+- `/settings` - personal salary and contribution controls
+- `/reports` - placeholder for personal export/history workflows
 
-It intentionally does **not** hardcode real government brackets, rates, or formulas.
+## Product Principles
 
-### Commands
+- The app is self-service for individual users.
+- Users create their own accounts and verify their own email.
+- Government formulas are table-driven and configurable in data, not hardcoded in code.
+- Tax is always automatically calculated from the configured INCOME_TAX table.
+- Manual contribution override mode applies only to SSS, PhilHealth, and Pag-IBIG.
 
-```bash
-npm run prisma:generate
-npm run db:push
-npm run db:seed
-```
+## Documentation
 
-## Next Phase
-
-Phase 4 will implement the dashboard, navigation, layout, and visual system.
+- `docs/project-scope.md` - product scope and behavior
+- `docs/database-design.md` - database design and data model
+- `docs/dashboard-experience.md` - dashboard experience
+- `docs/personal-settings.md` - personal settings and user controls
+- `docs/payroll-calculator.md` - payroll computation behavior
