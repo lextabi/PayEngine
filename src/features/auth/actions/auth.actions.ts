@@ -178,8 +178,7 @@ export const sendPasswordResetAction = async (
   if (error) {
     console.error("Password reset email request failed:", error.message);
     return {
-      error:
-        "We could not send the reset email. Check your Supabase redirect URLs, SMTP setup, or email rate limits.",
+      error: error.message,
     };
   }
 
