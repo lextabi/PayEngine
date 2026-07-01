@@ -30,7 +30,6 @@ export default async function PayrollPage() {
         recurringLoans={data.recurringLoans}
         recurringCashAdvances={data.recurringCashAdvances}
         recurringOtherDeductions={data.recurringOtherDeductions}
-        holidayRules={data.holidayRules}
       />
     </div>
   );

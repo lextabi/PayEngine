@@ -30,6 +30,13 @@ const statCards = [
 export default async function DashboardPage() {
   const user = await requireSessionUser();
   const overview = await getDashboardOverview(user.id);
+  const updatedAsOf = overview.sourceGuide.updatedAt
+    ? new Intl.DateTimeFormat("en-PH", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }).format(new Date(overview.sourceGuide.updatedAt))
+    : "Not available";
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 lg:gap-8">
@@ -98,6 +105,163 @@ export default async function DashboardPage() {
               <p className="mt-1 text-sm text-muted-foreground">
                 Save/reuse named calculator presets and add export history for personal financial planning.
               </p>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section>
+        <Card>
+          <CardHeader>
+            <CardTitle>How Tax Is Computed</CardTitle>
+            <CardDescription>
+              Tax uses the active INCOME_TAX rule table. The calculator maps your selected pay frequency to the rule basis and computes tax from bracket base amount plus rate on excess.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-2xl border border-border/70 bg-muted/20 p-4 text-sm">
+              <p>
+                Rule status: <span className="font-medium">{overview.taxGuide.status ?? "Not configured"}</span>
+              </p>
+              {overview.taxGuide.sample ? (
+                <p className="mt-2 text-muted-foreground">
+                  Sample using your default salary ({formatCurrency(overview.stats.defaultMonthlySalary)}) on semi-monthly basis: bracket #{overview.taxGuide.sample.appliedSequence} with {(overview.taxGuide.sample.appliedRate * 100).toFixed(2)}% rate, estimated tax {formatCurrency(overview.taxGuide.sample.computedTax)}.
+                </p>
+              ) : (
+                <p className="mt-2 text-muted-foreground">
+                  No matching tax bracket found for the sample basis yet.
+                </p>
+              )}
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-border/70">
+              <div className="grid grid-cols-[0.5fr_1.1fr_1fr_0.8fr_1fr] gap-3 border-b border-border/70 bg-muted/30 px-4 py-3 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                <span>#</span>
+                <span>Range</span>
+                <span>Base Amount</span>
+                <span>Rate</span>
+                <span>Formula</span>
+              </div>
+              {overview.taxGuide.rows.length === 0 ? (
+                <div className="px-4 py-4 text-sm text-muted-foreground">No INCOME_TAX rows configured.</div>
+              ) : (
+                overview.taxGuide.rows.map((row) => (
+                  <div
+                    key={row.sequence}
+                    className="grid grid-cols-[0.5fr_1.1fr_1fr_0.8fr_1fr] gap-3 border-b border-border/60 px-4 py-3 text-sm last:border-b-0"
+                  >
+                    <span>{row.sequence}</span>
+                    <span>
+                      {formatCurrency(row.rangeStart)} - {row.rangeEnd == null ? "and above" : formatCurrency(row.rangeEnd)}
+                    </span>
+                    <span>{formatCurrency(row.baseAmount)}</span>
+                    <span>{(row.employeeRate * 100).toFixed(2)}%</span>
+                    <span>{row.formulaKey || "-"}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Government Contributions ({overview.sourceGuide.assumptionsYear} Guide)</CardTitle>
+            <CardDescription>
+              SSS, PhilHealth, and Pag-IBIG are computed from configured rule tables for the selected rule year when manual contributions are disabled.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-2xl border border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">
+              Sample basis from your default monthly salary: {formatCurrency(overview.contributionGuide.basis.monthlySalary)} monthly / {formatCurrency(overview.contributionGuide.basis.semiMonthlySalary)} semi-monthly.
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-border/70">
+              <div className="grid grid-cols-[0.9fr_0.9fr_1fr_1fr_1fr_1fr] gap-3 border-b border-border/70 bg-muted/30 px-4 py-3 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                <span>Agency</span>
+                <span>Status</span>
+                <span>Bracket #</span>
+                <span>Formula</span>
+                <span>Monthly</span>
+                <span>Semi-monthly</span>
+              </div>
+              {overview.contributionGuide.rows.map((row) => (
+                <div
+                  key={row.code}
+                  className="grid grid-cols-[0.9fr_0.9fr_1fr_1fr_1fr_1fr] gap-3 border-b border-border/60 px-4 py-3 text-sm last:border-b-0"
+                >
+                  <span>{row.label}</span>
+                  <span>{row.status ?? "Not configured"}</span>
+                  <span>{row.appliedSequence ?? "-"}</span>
+                  <span>{row.formulaKey ?? "-"}</span>
+                  <span>{row.monthlyAmount == null ? "-" : formatCurrency(row.monthlyAmount)}</span>
+                  <span>{row.semiMonthlyAmount == null ? "-" : formatCurrency(row.semiMonthlyAmount)}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
+                <p className="text-sm font-medium">Estimated monthly contributions</p>
+                <p className="mt-1 text-2xl font-semibold tracking-tight">
+                  {formatCurrency(overview.contributionGuide.totalMonthlyContributions)}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
+                <p className="text-sm font-medium">Estimated semi-monthly contributions</p>
+                <p className="mt-1 text-2xl font-semibold tracking-tight">
+                  {formatCurrency(overview.contributionGuide.totalSemiMonthlyContributions)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Accuracy and Sources</CardTitle>
+            <CardDescription>
+              Answers to common verification questions: is this accurate, is this up to date, and where the computation basis comes from.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-2xl border border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">
+              <p>{overview.sourceGuide.summary}</p>
+              <p className="mt-2 font-medium text-foreground">
+                PhilHealth, SSS, Pag-IBIG, and Tax computations updated as of {updatedAsOf} based on sources.
+              </p>
+              <p className="mt-1">
+                Assumption year currently loaded: {overview.sourceGuide.assumptionsYear}
+              </p>
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-border/70">
+              <div className="grid grid-cols-[1fr_1fr_1.2fr] gap-3 border-b border-border/70 bg-muted/30 px-4 py-3 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                <span>Agency Source</span>
+                <span>Coverage</span>
+                <span>Reference Link</span>
+              </div>
+              {overview.sourceGuide.references.map((reference) => (
+                <div
+                  key={reference.key}
+                  className="grid grid-cols-[1fr_1fr_1.2fr] gap-3 border-b border-border/60 px-4 py-3 text-sm last:border-b-0"
+                >
+                  <span>{reference.label}</span>
+                  <span>{reference.coverage}</span>
+                  <a
+                    href={reference.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary underline underline-offset-4"
+                  >
+                    Open source
+                  </a>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

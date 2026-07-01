@@ -18,6 +18,7 @@ const navigationItems = [
   { href: "/dashboard", label: "Dashboard", description: "Personal overview" },
   { href: "/payroll", label: "My Calculator", description: "Run your payroll preview" },
   { href: "/settings", label: "My Settings", description: "Salary and contribution controls" },
+  { href: "/how-to-use", label: "How to Use", description: "Quick usage guide" },
   { href: "/reports", label: "My History", description: "Saved previews and exports" },
 ] as const;
 

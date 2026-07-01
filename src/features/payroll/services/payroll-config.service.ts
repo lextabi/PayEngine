@@ -38,6 +38,28 @@ const numericSettings: CompanyNumericSetting[] = [
   },
 ];
 
+const defaultHolidayRateMultipliers = {
+  REGULAR: 2,
+  SPECIAL: 1.3,
+  COMPANY: 1,
+} as const;
+
+function isRuleApplicableForYear(
+  rule: {
+    effectiveFrom: Date | null;
+    effectiveTo: Date | null;
+  },
+  year: number,
+) {
+  const yearStart = new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0));
+  const yearEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
+
+  const startsBeforeYearEnd = !rule.effectiveFrom || rule.effectiveFrom <= yearEnd;
+  const endsAfterYearStart = !rule.effectiveTo || rule.effectiveTo >= yearStart;
+
+  return startsBeforeYearEnd && endsAfterYearStart;
+}
+
 export async function getPayrollConfig(userId: string) {
   const [userSettings, holidayRules, governmentRules] = await Promise.all([
     getUserPayrollSettings(userId),
@@ -87,10 +109,60 @@ export async function getPayrollConfig(userId: string) {
     }),
   ) as Record<string, number>;
 
+  const selectedRuleYear = Number(userSettings.government_rule_year || 2026);
+  const normalizedRuleYear = Number.isFinite(selectedRuleYear)
+    ? Math.max(2000, Math.min(2100, Math.round(selectedRuleYear)))
+    : 2026;
+
+  const governmentRulesForYear = governmentRules.filter((rule) =>
+    isRuleApplicableForYear(rule, normalizedRuleYear),
+  );
+
+  const scopedGovernmentRules =
+    governmentRulesForYear.length > 0 ? governmentRulesForYear : governmentRules;
+
+  if (governmentRulesForYear.length === 0) {
+    warnings.push(
+      `No government rules were scoped for year ${normalizedRuleYear}. Using latest available active rules instead.`,
+    );
+  }
+
+  const getHolidayRateMultiplier = (type: keyof typeof defaultHolidayRateMultipliers) => {
+    const defaultValue = defaultHolidayRateMultipliers[type];
+    const matchedRule = holidayRules.find((rule) => rule.type === type);
+
+    if (!matchedRule || matchedRule.rateMultiplier == null) {
+      return defaultValue;
+    }
+
+    const parsed = Number(matchedRule.rateMultiplier);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : defaultValue;
+  };
+
+  const useManualHolidayBonuses = userSettings.use_manual_holiday_bonuses === "true";
+
   return {
     settings: config,
     holidayRules,
-    governmentRules,
+    holidayMultipliers: {
+      regular: getHolidayRateMultiplier("REGULAR"),
+      special: getHolidayRateMultiplier("SPECIAL"),
+      company: getHolidayRateMultiplier("COMPANY"),
+    },
+    governmentRules: scopedGovernmentRules,
+    selectedRuleYear: normalizedRuleYear,
+    holidayBonuses: {
+      enabled: useManualHolidayBonuses,
+      regular: useManualHolidayBonuses
+        ? Number(userSettings.regular_holiday_bonus_percent || 0)
+        : 0,
+      special: useManualHolidayBonuses
+        ? Number(userSettings.special_holiday_bonus_percent || 0)
+        : 0,
+      company: useManualHolidayBonuses
+        ? Number(userSettings.company_holiday_bonus_percent || 0)
+        : 0,
+    },
     manualContributions: {
       enabled: userSettings.use_manual_contributions === "true",
       sss: Number(userSettings.manual_sss_amount || 0),

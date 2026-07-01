@@ -8,11 +8,13 @@ const decimalInput = z
   .refine((value) => Number(value) >= 0, "Value must be zero or greater.");
 
 export const payrollCalculatorSchema = z.object({
+  payFrequency: z.enum(["MONTHLY", "SEMI_MONTHLY", "WEEKLY"]),
   monthlySalary: decimalInput,
   overtimeHours: decimalInput,
   nightDifferentialHours: decimalInput,
-  holidayHours: decimalInput,
-  holidayRuleCode: z.string().trim().optional(),
+  regularHolidayHours: decimalInput,
+  specialHolidayHours: decimalInput,
+  companyHolidayHours: decimalInput,
   restDayHours: decimalInput,
   absencesDays: decimalInput,
   tardinessMinutes: decimalInput,
@@ -30,11 +32,13 @@ export const payrollCalculatorSchema = z.object({
 export type PayrollCalculatorInput = z.infer<typeof payrollCalculatorSchema>;
 
 export const defaultPayrollCalculatorValues: PayrollCalculatorInput = {
+  payFrequency: "SEMI_MONTHLY",
   monthlySalary: "0",
   overtimeHours: "0",
   nightDifferentialHours: "0",
-  holidayHours: "0",
-  holidayRuleCode: "",
+  regularHolidayHours: "0",
+  specialHolidayHours: "0",
+  companyHolidayHours: "0",
   restDayHours: "0",
   absencesDays: "0",
   tardinessMinutes: "0",

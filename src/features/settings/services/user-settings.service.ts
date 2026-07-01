@@ -7,9 +7,14 @@ export const personalPayrollSettingDefaults = {
   working_days_per_month: "22",
   working_hours_per_day: "8",
   pay_periods_per_month: "2",
+  government_rule_year: "2026",
   overtime_multiplier: "1.25",
   night_differential_multiplier: "0.10",
   rest_day_multiplier: "1.30",
+  regular_holiday_bonus_percent: "0",
+  special_holiday_bonus_percent: "0",
+  company_holiday_bonus_percent: "0",
+  use_manual_holiday_bonuses: "false",
   use_manual_contributions: "false",
   manual_sss_amount: "0",
   manual_philhealth_amount: "0",
@@ -70,7 +75,7 @@ export async function upsertUserPayrollSettings(
         update: {
           value,
           valueType:
-            key === "use_manual_contributions"
+            key === "use_manual_contributions" || key === "use_manual_holiday_bonuses"
               ? SettingValueType.BOOLEAN
               : SettingValueType.NUMBER,
         },
@@ -79,7 +84,7 @@ export async function upsertUserPayrollSettings(
           key,
           value,
           valueType:
-            key === "use_manual_contributions"
+            key === "use_manual_contributions" || key === "use_manual_holiday_bonuses"
               ? SettingValueType.BOOLEAN
               : SettingValueType.NUMBER,
         },

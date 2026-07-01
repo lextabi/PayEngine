@@ -29,7 +29,32 @@ type GovernmentResult = {
   amount: number;
   warning?: string;
   sourceStatus?: RuleStatus;
+  details?: {
+    ruleCode: string;
+    sequence: number;
+    rangeStart: number;
+    rangeEnd: number | null;
+    baseAmount: number;
+    employeeRate: number;
+    formulaKey: FormulaKey;
+    excessOverRangeStart: number;
+    basisUsed: number;
+  };
 };
+
+type PayFrequency = "MONTHLY" | "SEMI_MONTHLY" | "WEEKLY";
+
+function getFrequencyPeriodsPerMonth(frequency: PayFrequency) {
+  if (frequency === "MONTHLY") {
+    return 1;
+  }
+
+  if (frequency === "WEEKLY") {
+    return 52 / 12;
+  }
+
+  return 2;
+}
 
 function computeConfiguredRuleAmount(
   basis: number,
@@ -106,6 +131,17 @@ function computeConfiguredRuleAmount(
     amount: roundToCurrency(amount),
     warning,
     sourceStatus: rule.status,
+    details: {
+      ruleCode,
+      sequence: matchingRow.sequence,
+      rangeStart,
+      rangeEnd: matchingRow.rangeEnd == null ? null : toNumber(matchingRow.rangeEnd),
+      baseAmount,
+      employeeRate,
+      formulaKey,
+      excessOverRangeStart: roundToCurrency(Math.max(basis - rangeStart, 0)),
+      basisUsed: roundToCurrency(basis),
+    },
   };
 }
 
@@ -119,7 +155,9 @@ export async function calculatePayrollPreview(
 
   const workingDaysPerMonth = config.settings.working_days_per_month;
   const workingHoursPerDay = config.settings.working_hours_per_day;
-  const payPeriodsPerMonth = config.settings.pay_periods_per_month;
+  const selectedFrequency = input.payFrequency as PayFrequency;
+  const payPeriodsPerMonth = getFrequencyPeriodsPerMonth(selectedFrequency);
+  const periodsPerYear = payPeriodsPerMonth * 12;
   const overtimeMultiplier = config.settings.overtime_multiplier;
   const nightDifferentialMultiplier = config.settings.night_differential_multiplier;
   const restDayMultiplier = config.settings.rest_day_multiplier;
@@ -132,7 +170,9 @@ export async function calculatePayrollPreview(
 
   const overtimeHours = parseInput(input.overtimeHours);
   const nightDifferentialHours = parseInput(input.nightDifferentialHours);
-  const holidayHours = parseInput(input.holidayHours);
+  const regularHolidayHours = parseInput(input.regularHolidayHours);
+  const specialHolidayHours = parseInput(input.specialHolidayHours);
+  const companyHolidayHours = parseInput(input.companyHolidayHours);
   const restDayHours = parseInput(input.restDayHours);
   const absencesDays = parseInput(input.absencesDays);
   const tardinessMinutes = parseInput(input.tardinessMinutes);
@@ -151,18 +191,37 @@ export async function calculatePayrollPreview(
     nightDifferentialHours * hourlyRate * nightDifferentialMultiplier,
   );
 
-  let holidayPay = 0;
-  if (holidayHours > 0) {
-    const holidayRule = config.holidayRules.find((rule) => rule.code === input.holidayRuleCode);
-
-    if (!holidayRule) {
-      warnings.push("Holiday hours were entered but no active holiday rule was selected.");
-    } else if (holidayRule.rateMultiplier == null) {
-      warnings.push(`${holidayRule.name} has no configured rate multiplier.`);
-    } else {
-      holidayPay = roundToCurrency(holidayHours * hourlyRate * toNumber(holidayRule.rateMultiplier));
+  const computeHolidayTypePay = (
+    hours: number,
+    multiplier: number,
+    bonusPercent: number,
+  ) => {
+    if (hours <= 0) {
+      return 0;
     }
-  }
+
+    const baseHolidayPay = hours * hourlyRate * multiplier;
+    const bonusFactor = 1 + bonusPercent / 100;
+
+    return roundToCurrency(baseHolidayPay * bonusFactor);
+  };
+
+  const regularHolidayPay = computeHolidayTypePay(
+    regularHolidayHours,
+    config.holidayMultipliers.regular,
+    config.holidayBonuses.regular,
+  );
+  const specialHolidayPay = computeHolidayTypePay(
+    specialHolidayHours,
+    config.holidayMultipliers.special,
+    config.holidayBonuses.special,
+  );
+  const companyHolidayPay = computeHolidayTypePay(
+    companyHolidayHours,
+    config.holidayMultipliers.company,
+    config.holidayBonuses.company,
+  );
+  const holidayPay = roundToCurrency(regularHolidayPay + specialHolidayPay + companyHolidayPay);
 
   const restDayPay = roundToCurrency(restDayHours * hourlyRate * restDayMultiplier);
   const absenceDeduction = roundToCurrency(absencesDays * dailyRate);
@@ -182,20 +241,47 @@ export async function calculatePayrollPreview(
 
   const grossPay = roundToCurrency(totalEarnings - absenceDeduction - tardinessDeduction);
 
-  const sss = config.manualContributions.enabled
+  const monthlyEquivalentBasis = roundToCurrency(grossPay * (periodsPerYear / 12));
+  const periodScaleFromMonthly = 12 / periodsPerYear;
+
+  const sssMonthly = config.manualContributions.enabled
     ? { amount: roundToCurrency(config.manualContributions.sss) }
-    : computeConfiguredRuleAmount(grossPay, "SSS", config.governmentRules);
-  const philHealth = config.manualContributions.enabled
+    : computeConfiguredRuleAmount(monthlyEquivalentBasis, "SSS", config.governmentRules);
+  const philHealthMonthly = config.manualContributions.enabled
     ? { amount: roundToCurrency(config.manualContributions.philHealth) }
-    : computeConfiguredRuleAmount(grossPay, "PHILHEALTH", config.governmentRules);
-  const pagIbig = config.manualContributions.enabled
+    : computeConfiguredRuleAmount(monthlyEquivalentBasis, "PHILHEALTH", config.governmentRules);
+  const pagIbigMonthly = config.manualContributions.enabled
     ? { amount: roundToCurrency(config.manualContributions.pagIbig) }
-    : computeConfiguredRuleAmount(grossPay, "PAG_IBIG", config.governmentRules);
-  const incomeTax = computeConfiguredRuleAmount(
-    grossPay,
+    : computeConfiguredRuleAmount(monthlyEquivalentBasis, "PAG_IBIG", config.governmentRules);
+
+  const sss = {
+    ...sssMonthly,
+    amount: roundToCurrency(sssMonthly.amount * periodScaleFromMonthly),
+  };
+  const philHealth = {
+    ...philHealthMonthly,
+    amount: roundToCurrency(philHealthMonthly.amount * periodScaleFromMonthly),
+  };
+  const pagIbig = {
+    ...pagIbigMonthly,
+    amount: roundToCurrency(pagIbigMonthly.amount * periodScaleFromMonthly),
+  };
+  const semiMonthlyEquivalentBasis = roundToCurrency(grossPay * (periodsPerYear / 24));
+  const incomeTaxSemiMonthly = computeConfiguredRuleAmount(
+    semiMonthlyEquivalentBasis,
     "INCOME_TAX",
     config.governmentRules,
   );
+  const incomeTax = {
+    ...incomeTaxSemiMonthly,
+    amount: roundToCurrency(incomeTaxSemiMonthly.amount * (24 / periodsPerYear)),
+    details: incomeTaxSemiMonthly.details
+      ? {
+          ...incomeTaxSemiMonthly.details,
+          basisUsed: semiMonthlyEquivalentBasis,
+        }
+      : undefined,
+  };
 
   [sss.warning, philHealth.warning, pagIbig.warning, incomeTax.warning]
     .filter(Boolean)
@@ -232,6 +318,9 @@ export async function calculatePayrollPreview(
       periodBasePay,
       overtimePay,
       nightDifferentialPay,
+      regularHolidayPay,
+      specialHolidayPay,
+      companyHolidayPay,
       holidayPay,
       restDayPay,
       bonuses,
@@ -259,13 +348,29 @@ export async function calculatePayrollPreview(
       tax: totalTax,
       totalContributions,
     },
+    taxBreakdown: incomeTax.details
+      ? {
+          appliedRuleCode: incomeTax.details.ruleCode,
+          bracketSequence: incomeTax.details.sequence,
+          bracketRangeStart: incomeTax.details.rangeStart,
+          bracketRangeEnd: incomeTax.details.rangeEnd,
+          bracketRate: incomeTax.details.employeeRate,
+          baseAmount: incomeTax.details.baseAmount,
+          formulaKey: incomeTax.details.formulaKey,
+          basisForTaxTable: incomeTax.details.basisUsed,
+          excessOverRangeStart: incomeTax.details.excessOverRangeStart,
+          selectedPayFrequency: selectedFrequency,
+          selectedPeriodGrossPay: grossPay,
+          finalTaxForSelectedPeriod: totalTax,
+        }
+      : null,
     netPay,
     warnings,
     configUsed: {
+      payFrequency: selectedFrequency,
       overtimeMultiplier,
       nightDifferentialMultiplier,
       restDayMultiplier,
-      holidayRuleCode: input.holidayRuleCode || null,
       manualContributionsEnabled: config.manualContributions.enabled,
     },
   };

@@ -17,14 +17,15 @@ This document describes the core data model for the personal payroll calculator.
 
 ## Seed Data
 
-The seed script intentionally avoids hardcoding live government brackets and rates.
+The seed script currently initializes active 2026 baseline records used by the personal calculator:
 
-It creates:
-
-- government rule containers
+- INCOME_TAX semi-monthly bracket rows (TRAIN 2023 onwards)
+- SSS monthly contribution rows
+- PhilHealth monthly contribution rows
+- Pag-IBIG monthly contribution rows
 - holiday rule containers
 
-Numeric rates and contribution brackets remain editable records in the database.
+Seeded rules include `effectiveFrom` metadata (`2026-01-01`) to support year-aware rule scoping.
 
 ## Operational Notes
 

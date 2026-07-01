@@ -28,14 +28,23 @@ export async function savePersonalSettingsAction(
   try {
     const user = await requireSessionUser();
 
+    const overtimeMultiplier = (1 + Number(parsed.data.overtimePercent) / 100).toFixed(4);
+    const nightDifferentialMultiplier = (Number(parsed.data.nightDifferentialPercent) / 100).toFixed(4);
+    const restDayMultiplier = (1 + Number(parsed.data.restDayPercent) / 100).toFixed(4);
+
     await upsertUserPayrollSettings(user.id, {
       default_monthly_salary: parsed.data.defaultMonthlySalary,
       working_days_per_month: parsed.data.workingDaysPerMonth,
       working_hours_per_day: parsed.data.workingHoursPerDay,
       pay_periods_per_month: parsed.data.payPeriodsPerMonth,
-      overtime_multiplier: parsed.data.overtimeMultiplier,
-      night_differential_multiplier: parsed.data.nightDifferentialMultiplier,
-      rest_day_multiplier: parsed.data.restDayMultiplier,
+      government_rule_year: parsed.data.governmentRuleYear,
+      overtime_multiplier: overtimeMultiplier,
+      night_differential_multiplier: nightDifferentialMultiplier,
+      rest_day_multiplier: restDayMultiplier,
+      regular_holiday_bonus_percent: parsed.data.regularHolidayBonusPercent,
+      special_holiday_bonus_percent: parsed.data.specialHolidayBonusPercent,
+      company_holiday_bonus_percent: parsed.data.companyHolidayBonusPercent,
+      use_manual_holiday_bonuses: String(parsed.data.useManualHolidayBonuses),
       use_manual_contributions: String(parsed.data.useManualContributions),
       manual_sss_amount: parsed.data.manualSssAmount,
       manual_philhealth_amount: parsed.data.manualPhilHealthAmount,

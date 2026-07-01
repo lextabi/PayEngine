@@ -27,9 +27,21 @@ export const clientEnv = clientEnvSchema.parse({
 const isServer = typeof window === "undefined";
 
 export const serverEnv = isServer
-  ? serverEnvSchema.parse({
+  ? {
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
       DATABASE_URL: process.env.DATABASE_URL,
       DIRECT_URL: process.env.DIRECT_URL,
-    })
+    }
   : null;
+
+export function getValidatedServerEnv() {
+  if (!isServer) {
+    return null;
+  }
+
+  return serverEnvSchema.parse({
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    DATABASE_URL: process.env.DATABASE_URL,
+    DIRECT_URL: process.env.DIRECT_URL,
+  });
+}

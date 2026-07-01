@@ -8,13 +8,16 @@ The payroll calculator provides personal payroll computation preview for signed-
 - Pure computation service for payroll preview
 - Config reader for user settings, holiday rules, and government rule tables
 - Preview output for rates, earnings, deductions, government contributions, tax, and net pay
-- Warning system when rule tables or company settings are incomplete
+- Warning system when scoped rule data or settings are incomplete
+- Automatic fallback holiday multipliers (Regular 2.0, Special 1.3, Company 1.0)
+- 2026 seeded government contribution rule support for SSS, PhilHealth, and Pag-IBIG
+- Rule-year scoping using user setting `government_rule_year`
 
 ## Important Constraints
 
 - Government formulas are not hardcoded as fixed bracket values in code.
 - Government deductions are computed only from database-configured `government_rules` and `government_tables` rows.
-- If rule tables are missing or incomplete, the preview returns warnings and uses `0` for that rule output.
+- If scoped rule tables are missing for a selected year, the preview returns a fallback warning and uses latest available active rules.
 - Income tax is always computed from the INCOME_TAX rule table.
 
 ## Current Computation Inputs
@@ -22,8 +25,9 @@ The payroll calculator provides personal payroll computation preview for signed-
 - monthly salary
 - overtime hours
 - night differential hours
-- holiday hours
-- holiday rule selection
+- regular holiday hours
+- special holiday hours
+- company holiday hours
 - rest day hours
 - absences days
 - tardiness minutes
@@ -44,9 +48,14 @@ The preview reads user settings for:
 - `working_days_per_month`
 - `working_hours_per_day`
 - `pay_periods_per_month`
+- `government_rule_year`
 - `overtime_multiplier`
 - `night_differential_multiplier`
 - `rest_day_multiplier`
+- `use_manual_holiday_bonuses`
+- `regular_holiday_bonus_percent`
+- `special_holiday_bonus_percent`
+- `company_holiday_bonus_percent`
 - `use_manual_contributions`
 - `manual_sss_amount`
 - `manual_philhealth_amount`
@@ -57,3 +66,4 @@ The preview reads user settings for:
 - The calculator currently previews values and does not persist payroll runs.
 - Manual contribution mode applies to SSS, PhilHealth, and Pag-IBIG only.
 - Tax remains automatic and rule-table driven at all times.
+- Government contribution rules are evaluated on monthly-equivalent basis then scaled to selected pay frequency.

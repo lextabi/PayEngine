@@ -29,6 +29,7 @@ export function PersonalSettingsForm({ initialValues }: PersonalSettingsFormProp
     defaultValues: initialValues,
   });
 
+  const useManualHolidayBonuses = form.watch("useManualHolidayBonuses");
   const useManualContributions = form.watch("useManualContributions");
 
   const onSubmit = form.handleSubmit((values) => {
@@ -57,9 +58,41 @@ export function PersonalSettingsForm({ initialValues }: PersonalSettingsFormProp
               <MetricField form={form} name="workingDaysPerMonth" label="Working Days Per Month" />
               <MetricField form={form} name="workingHoursPerDay" label="Working Hours Per Day" />
               <MetricField form={form} name="payPeriodsPerMonth" label="Pay Periods Per Month" />
-              <MetricField form={form} name="overtimeMultiplier" label="Overtime Multiplier" />
-              <MetricField form={form} name="nightDifferentialMultiplier" label="Night Diff Multiplier" />
-              <MetricField form={form} name="restDayMultiplier" label="Rest Day Multiplier" />
+              <MetricField form={form} name="governmentRuleYear" label="Government Rule Year" />
+              <MetricField form={form} name="overtimePercent" label="Overtime Add-on (%)" />
+              <MetricField form={form} name="nightDifferentialPercent" label="Night Diff Add-on (%)" />
+              <MetricField form={form} name="restDayPercent" label="Rest Day Add-on (%)" />
+            </section>
+
+            <section className="space-y-4 rounded-2xl border border-border/70 bg-muted/20 p-4">
+              <p className="text-sm font-medium">Holiday Bonus Percentages</p>
+              <p className="text-sm text-muted-foreground">
+                Default holiday bonus percentages apply automatically unless you enable manual override.
+              </p>
+              <label className="flex items-center gap-3 text-sm font-medium">
+                <input type="checkbox" {...form.register("useManualHolidayBonuses")} className="size-4" />
+                Use manual holiday bonus percentages
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <MetricField
+                  form={form}
+                  name="regularHolidayBonusPercent"
+                  label="Regular Holiday Bonus (%)"
+                  disabled={!useManualHolidayBonuses}
+                />
+                <MetricField
+                  form={form}
+                  name="specialHolidayBonusPercent"
+                  label="Special Holiday Bonus (%)"
+                  disabled={!useManualHolidayBonuses}
+                />
+                <MetricField
+                  form={form}
+                  name="companyHolidayBonusPercent"
+                  label="Company Holiday Bonus (%)"
+                  disabled={!useManualHolidayBonuses}
+                />
+              </div>
             </section>
 
             <section className="space-y-4 rounded-2xl border border-border/70 bg-muted/20 p-4">

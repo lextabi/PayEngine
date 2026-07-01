@@ -65,6 +65,28 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+## Deploy to Vercel
+
+1. Push your latest code to GitHub.
+2. In Vercel, create a new project and import this repository.
+3. Set build settings:
+   - Framework Preset: `Next.js`
+   - Build Command: `npm run build`
+   - Install Command: `npm install`
+4. Add required environment variables in Vercel Project Settings:
+   - `NEXT_PUBLIC_APP_NAME`
+   - `NEXT_PUBLIC_APP_URL`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `DATABASE_URL`
+   - `DIRECT_URL`
+5. In Supabase Auth URL Configuration:
+   - Set Site URL to your Vercel production URL.
+   - Add redirect URLs for `/login`, `/signup`, `/verify-email`, and `/dashboard`.
+6. Trigger deploy in Vercel.
+7. Run post-deploy checks from `docs/vercel-deployment.md`.
+
 ## Scripts
 
 - `npm run dev` - start development server
@@ -133,8 +155,13 @@ The application uses these core tables:
 - [x] Session-based redirects implemented
 - [x] Personal payroll preview calculator added
 - [x] User-scoped payroll settings added
+- [x] Percentage-based settings UX for overtime/night diff/rest day
+- [x] Manual holiday bonus override toggle and per-holiday bonus percentages added
 - [x] Manual contribution override controls added (SSS/PhilHealth/Pag-IBIG)
 - [x] Tax is always computed automatically from the INCOME_TAX rule table
+- [x] 2026 seeded contribution tables for SSS/PhilHealth/Pag-IBIG added
+- [x] Dashboard source links and "updated as of" trust messaging added
+- [x] Government rule year selection added to settings for policy-year scoping
 - [x] Dashboard and navigation updated for personal workflow
 
 ## Personal Workflow Routes
@@ -154,6 +181,8 @@ The application uses these core tables:
 - Government formulas are table-driven and configurable in data, not hardcoded in code.
 - Tax is always automatically calculated from the configured INCOME_TAX table.
 - Manual contribution override mode applies only to SSS, PhilHealth, and Pag-IBIG.
+- Holiday bonus manual override is optional and defaults to automatic behavior when disabled.
+- Government computation references and freshness are surfaced on the dashboard.
 
 ## Documentation
 
@@ -162,3 +191,4 @@ The application uses these core tables:
 - `docs/dashboard-experience.md` - dashboard experience
 - `docs/personal-settings.md` - personal settings and user controls
 - `docs/payroll-calculator.md` - payroll computation behavior
+- `docs/vercel-deployment.md` - production deployment checklist for Vercel

@@ -10,11 +10,15 @@ The dashboard provides a personal workspace for signed-in users.
 - Dark mode toggle backed by `localStorage`
 - Personal overview cards for salary/settings posture
 - Configuration snapshot panel for contribution mode visibility
+- Tax explainability panel with table and sample bracket computation
+- Government contribution guide with sample monthly and semi-monthly computations
+- Accuracy and sources panel with official links and "updated as of" messaging
 - Placeholder reports route for future personal history/exports
 
 ## Notes
 
 - Metrics are based on user-scoped settings and current calculator setup.
+- Source references and freshness date are derived from active configured rule records and their latest updates.
 - The dashboard intentionally stays lightweight and focused on personal context.
 
 ## Route Summary
