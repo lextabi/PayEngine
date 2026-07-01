@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { clientEnv } from "@/config/env";
 
-const publicRoutes = new Set(["/login", "/signup", "/verify-email", "/forgot-password", "/reset-password"]);
+const publicRoutes = new Set(["/login", "/signup", "/verify-email", "/forgot-password", "/reset-password", "/auth/confirm"]);
 
 const isPublicRoute = (pathname: string) => {
   if (publicRoutes.has(pathname)) {

@@ -34,22 +34,6 @@ export function ResetPasswordForm() {
 
     const initialize = async () => {
       const supabase = createSupabaseBrowserClient();
-      const currentUrl = new URL(window.location.href);
-      const recoveryCode = currentUrl.searchParams.get("code");
-
-      if (recoveryCode) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(recoveryCode);
-
-        if (exchangeError && mounted) {
-          setError("The recovery link could not be verified. Please request a new one.");
-          setIsReady(true);
-          return;
-        }
-
-        currentUrl.searchParams.delete("code");
-        window.history.replaceState({}, document.title, currentUrl.toString());
-      }
-
       const {
         data: { session },
       } = await supabase.auth.getSession();

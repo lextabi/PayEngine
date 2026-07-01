@@ -7,9 +7,19 @@ export type ReleaseNote = {
 
 export const appRelease = {
   name: "PayEngine",
-  version: "1.2.5",
+  version: "1.2.6",
   releasedOn: "2026-07-01",
   releaseNotes: [
+    {
+      version: "1.2.6",
+      releasedOn: "2026-07-01",
+      summary: "Password reset recovery-flow fix.",
+      changes: [
+        "Added a dedicated server-side auth confirm route for password reset recovery links.",
+        "Moved reset-email redirects to the confirm route so mobile browsers can complete the session exchange reliably.",
+        "Removed client-side recovery code exchange from the reset-password page.",
+      ],
+    },
     {
       version: "1.2.5",
       releasedOn: "2026-07-01",
