@@ -5,11 +5,11 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import {
-  loginAction,
-  type LoginActionState,
+  sendPasswordResetAction,
+  type ForgotPasswordActionState,
 } from "@/features/auth/actions/auth.actions";
 
-const initialState: LoginActionState = {};
+const initialState: ForgotPasswordActionState = {};
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -20,13 +20,13 @@ function SubmitButton() {
       disabled={pending}
       className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 w-full items-center justify-center rounded-lg px-4 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
     >
-      {pending ? "Signing in..." : "Sign in"}
+      {pending ? "Sending link..." : "Send reset link"}
     </button>
   );
 }
 
-export function LoginForm() {
-  const [state, formAction] = useActionState(loginAction, initialState);
+export function ForgotPasswordForm() {
+  const [state, formAction] = useActionState(sendPasswordResetAction, initialState);
 
   return (
     <form action={formAction} className="space-y-4">
@@ -45,37 +45,26 @@ export function LoginForm() {
         />
       </div>
 
-      <div className="space-y-2">
-        <label htmlFor="password" className="text-sm font-medium">
-          Password
-        </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring h-10 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-2"
-          placeholder="••••••••"
-        />
-      </div>
-
       {state.error ? (
         <p className="text-destructive text-sm" role="alert">
           {state.error}
         </p>
       ) : null}
 
+      {state.message ? (
+        <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-300">
+          {state.message}
+        </p>
+      ) : null}
+
       <SubmitButton />
 
-      <div className="flex items-center justify-between gap-3 text-sm">
-        <Link href="/forgot-password" className="text-muted-foreground underline-offset-4 hover:underline">
-          Forgot password?
+      <p className="text-sm text-muted-foreground">
+        Remembered it?{" "}
+        <Link href="/login" className="text-foreground font-medium underline-offset-4 hover:underline">
+          Back to sign in
         </Link>
-        <Link href="/signup" className="text-foreground font-medium underline-offset-4 hover:underline">
-          Create an account
-        </Link>
-      </div>
+      </p>
     </form>
   );
 }

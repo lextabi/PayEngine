@@ -7,9 +7,28 @@ export type ReleaseNote = {
 
 export const appRelease = {
   name: "PayEngine",
-  version: "1.2.2",
+  version: "1.2.4",
   releasedOn: "2026-07-01",
   releaseNotes: [
+    {
+      version: "1.2.4",
+      releasedOn: "2026-07-01",
+      summary: "Auth security hardening update.",
+      changes: [
+        "Added a simple cooldown to login, signup, and forgot-password actions to reduce spam and abuse.",
+        "Kept forgot-password responses generic to avoid leaking account details.",
+      ],
+    },
+    {
+      version: "1.2.3",
+      releasedOn: "2026-07-01",
+      summary: "Password recovery and change-password release.",
+      changes: [
+        "Added forgot-password flow from the login screen with recovery email link.",
+        "Added reset-password page for recovery-link password changes.",
+        "Added signed-in password change card in My Settings with current-password verification.",
+      ],
+    },
     {
       version: "1.2.2",
       releasedOn: "2026-07-01",

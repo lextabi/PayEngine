@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { loginSchema, signupSchema } from "@/features/auth/schema/login.schema";
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  signupSchema,
+} from "@/features/auth/schema/login.schema";
 import { clientEnv } from "@/config/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -16,7 +20,44 @@ export type SignupActionState = {
   message?: string;
 };
 
+export type ForgotPasswordActionState = {
+  error?: string;
+  message?: string;
+};
+
 const INVALID_CREDENTIALS = "Invalid email or password.";
+const ACTION_COOLDOWN_MS = 30_000;
+
+type CooldownEntry = {
+  expiresAt: number;
+};
+
+const actionCooldownStore = new Map<string, CooldownEntry>();
+
+function normalizeEmail(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function enforceActionCooldown(action: string, email: string) {
+  const key = `${action}:${normalizeEmail(email)}`;
+  const now = Date.now();
+  const existing = actionCooldownStore.get(key);
+
+  if (existing && existing.expiresAt > now) {
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.ceil((existing.expiresAt - now) / 1000),
+    };
+  }
+
+  actionCooldownStore.set(key, {
+    expiresAt: now + ACTION_COOLDOWN_MS,
+  });
+
+  return {
+    allowed: true,
+  };
+}
 
 const mapSignInError = (message: string) => {
   const normalized = message.toLowerCase();
@@ -40,6 +81,14 @@ export const loginAction = async (
   if (!parsed.success) {
     return {
       error: parsed.error.issues[0]?.message ?? INVALID_CREDENTIALS,
+    };
+  }
+
+  const cooldown = enforceActionCooldown("login", parsed.data.email);
+
+  if (!cooldown.allowed) {
+    return {
+      error: `Please wait ${cooldown.retryAfterSeconds} seconds before trying again.`,
     };
   }
 
@@ -72,6 +121,14 @@ export const signupAction = async (
     };
   }
 
+  const cooldown = enforceActionCooldown("signup", parsed.data.email);
+
+  if (!cooldown.allowed) {
+    return {
+      error: `Please wait ${cooldown.retryAfterSeconds} seconds before trying again.`,
+    };
+  }
+
   const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase.auth.signUp({
@@ -89,6 +146,44 @@ export const signupAction = async (
   }
 
   redirect("/verify-email");
+};
+
+export const sendPasswordResetAction = async (
+  _prevState: ForgotPasswordActionState,
+  formData: FormData,
+): Promise<ForgotPasswordActionState> => {
+  const parsed = forgotPasswordSchema.safeParse({
+    email: formData.get("email"),
+  });
+
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Invalid email address.",
+    };
+  }
+
+  const cooldown = enforceActionCooldown("forgot-password", parsed.data.email);
+
+  if (!cooldown.allowed) {
+    return {
+      message: `Please wait ${cooldown.retryAfterSeconds} seconds before requesting another reset link.`,
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${clientEnv.NEXT_PUBLIC_APP_URL}/reset-password`,
+  });
+
+  if (error) {
+    return {
+      message: "If the email exists, a password reset link has been sent.",
+    };
+  }
+
+  return {
+    message: "If the email exists, a password reset link has been sent.",
+  };
 };
 
 export const logoutAction = async () => {
