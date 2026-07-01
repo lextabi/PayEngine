@@ -7,9 +7,20 @@ export type ReleaseNote = {
 
 export const appRelease = {
   name: "PayEngine",
-  version: "1.2.0",
+  version: "1.2.1",
   releasedOn: "2026-07-01",
   releaseNotes: [
+    {
+      version: "1.2.1",
+      releasedOn: "2026-07-01",
+      summary: "Product transparency and shell polish update.",
+      changes: [
+        "Added About This App page with current version and structured release notes.",
+        "Added About This App navigation entry and sidebar version badge.",
+        "Updated sidebar brand subtitle to user-friendly wording.",
+        "Added smooth sidebar collapse transitions and animated toggle icon state change.",
+      ],
+    },
     {
       version: "1.2.0",
       releasedOn: "2026-07-01",

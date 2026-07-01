@@ -97,7 +97,7 @@ export function AppShell({ children, user }: AppShellProps) {
 
         <aside
           className={cn(
-            "bg-sidebar/88 border-sidebar-border fixed inset-y-0 left-0 z-40 flex w-80 flex-col border-r px-4 py-5 shadow-2xl backdrop-blur-xl transition-transform lg:sticky lg:translate-x-0 lg:shadow-none",
+            "bg-sidebar/88 border-sidebar-border fixed inset-y-0 left-0 z-40 flex w-80 flex-col border-r px-4 py-5 shadow-2xl backdrop-blur-xl transition-all duration-300 ease-out lg:sticky lg:translate-x-0 lg:shadow-none",
             sidebarCollapsed ? "lg:w-24" : "lg:w-80",
             mobileOpen ? "translate-x-0" : "-translate-x-full",
           )}
@@ -107,12 +107,17 @@ export function AppShell({ children, user }: AppShellProps) {
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex size-11 items-center justify-center rounded-2xl shadow-sm">
                 <ShieldCheck className="size-5" />
               </div>
-              {!sidebarCollapsed ? (
+              <div
+                className={cn(
+                  "overflow-hidden transition-all duration-300 ease-out",
+                  sidebarCollapsed ? "max-w-0 opacity-0" : "max-w-[180px] opacity-100",
+                )}
+              >
                 <div>
                   <p className="text-sm font-semibold tracking-[0.18em] uppercase">PayEngine</p>
-                  <p className="text-sidebar-foreground/70 text-xs">Payroll Operations</p>
+                  <p className="text-sidebar-foreground/70 text-xs">Personal Payroll Companion</p>
                 </div>
-              ) : null}
+              </div>
             </Link>
 
             <button
@@ -121,7 +126,20 @@ export function AppShell({ children, user }: AppShellProps) {
               aria-label="Toggle sidebar width"
               onClick={() => setSidebarCollapsed((value) => !value)}
             >
-              {sidebarCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+              <span className="relative inline-flex size-4 items-center justify-center">
+                <PanelLeftClose
+                  className={cn(
+                    "absolute size-4 transition-all duration-300 ease-out",
+                    sidebarCollapsed ? "rotate-90 opacity-0" : "rotate-0 opacity-100",
+                  )}
+                />
+                <PanelLeftOpen
+                  className={cn(
+                    "absolute size-4 transition-all duration-300 ease-out",
+                    sidebarCollapsed ? "rotate-0 opacity-100" : "-rotate-90 opacity-0",
+                  )}
+                />
+              </span>
             </button>
           </div>
 
@@ -131,12 +149,17 @@ export function AppShell({ children, user }: AppShellProps) {
                 <Avatar className="bg-sidebar-primary/12 text-sidebar-primary">
                   <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
                 </Avatar>
-                {!sidebarCollapsed ? (
+                <div
+                  className={cn(
+                    "min-w-0 overflow-hidden transition-all duration-300 ease-out",
+                    sidebarCollapsed ? "max-w-0 opacity-0" : "max-w-[180px] opacity-100",
+                  )}
+                >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{userName}</p>
                     <p className="text-sidebar-foreground/70 truncate text-xs">{user.email}</p>
                   </div>
-                ) : null}
+                </div>
               </div>
             </div>
           </div>
@@ -163,16 +186,31 @@ export function AppShell({ children, user }: AppShellProps) {
                     <span className={cn("inline-flex size-7 items-center justify-center rounded-xl", isActive ? "bg-sidebar-primary-foreground/16" : "bg-sidebar-accent/70")}> 
                       <Icon className="size-4" />
                     </span>
-                    {sidebarCollapsed ? item.label.slice(0, 1) : item.label}
+                    <span
+                      className={cn(
+                        "overflow-hidden whitespace-nowrap transition-all duration-300 ease-out",
+                        sidebarCollapsed ? "max-w-0 opacity-0" : "max-w-[120px] opacity-100",
+                      )}
+                    >
+                      {item.label}
+                    </span>
+                    {sidebarCollapsed ? (
+                      <span className="text-xs">{item.label.slice(0, 1)}</span>
+                    ) : null}
                     {!sidebarCollapsed && item.comingSoon ? (
                       <span className={cn("ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide", isActive ? "bg-sidebar-primary-foreground/18 text-sidebar-primary-foreground" : "bg-sidebar-accent text-sidebar-foreground")}>Soon</span>
                     ) : null}
                   </div>
-                  {!sidebarCollapsed ? (
-                    <div className={cn("mt-1 text-xs", isActive ? "text-sidebar-primary-foreground/75" : "text-sidebar-foreground/60")}>
+                  <div
+                    className={cn(
+                      "mt-1 overflow-hidden transition-all duration-300 ease-out",
+                      sidebarCollapsed ? "max-h-0 opacity-0" : "max-h-10 opacity-100",
+                    )}
+                  >
+                    <div className={cn("text-xs", isActive ? "text-sidebar-primary-foreground/75" : "text-sidebar-foreground/60")}>
                       {item.description}
                     </div>
-                  ) : null}
+                  </div>
                 </Link>
               );
             })}
@@ -180,13 +218,18 @@ export function AppShell({ children, user }: AppShellProps) {
 
           <Separator className="mb-4 mt-2 bg-sidebar-border/70" />
 
-          {!sidebarCollapsed ? (
+          <div
+            className={cn(
+              "mb-4 overflow-hidden px-2 transition-all duration-300 ease-out",
+              sidebarCollapsed ? "max-h-0 opacity-0" : "max-h-20 opacity-100",
+            )}
+          >
             <div className="mb-4 px-2">
               <div className="rounded-xl border border-sidebar-border/70 bg-sidebar-accent/40 px-3 py-2 text-xs text-sidebar-foreground/70">
                 Version {appRelease.version}
               </div>
             </div>
-          ) : null}
+          </div>
 
           <form action={logoutAction} className="px-2">
             <Button type="submit" variant="outline" className="w-full justify-center border-sidebar-border bg-sidebar hover:bg-sidebar-accent">
