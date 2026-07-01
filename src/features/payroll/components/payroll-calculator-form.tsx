@@ -119,7 +119,7 @@ export function PayrollCalculatorForm({
       const worksheet = XLSX.utils.aoa_to_sheet(rows);
       worksheet["!cols"] = computeExcelColumnWidths(rows);
 
-      const headerRows = new Set([1, 4, 8, 13, 29]);
+      const headerRows = new Set([1, 4, 8, 13, 28]);
       const warningHeaderRow = preview.warnings.length > 0 ? rows.findIndex((row) => row[0] === "Warnings") + 1 : -1;
 
       const range = XLSX.utils.decode_range(worksheet["!ref"] ?? "A1:B1");
