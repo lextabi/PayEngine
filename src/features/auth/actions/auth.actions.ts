@@ -26,7 +26,7 @@ export type ForgotPasswordActionState = {
 };
 
 const INVALID_CREDENTIALS = "Invalid email or password.";
-const ACTION_COOLDOWN_MS = 30_000;
+const ACTION_COOLDOWN_MS = 60_000;
 
 type CooldownEntry = {
   expiresAt: number;
@@ -177,6 +177,14 @@ export const sendPasswordResetAction = async (
 
   if (error) {
     console.error("Password reset email request failed:", error.message);
+
+    if (error.message.toLowerCase().includes("rate limit")) {
+      return {
+        error:
+          "Supabase email rate limit exceeded. Please wait about 60 seconds and try again, or configure custom SMTP for reliable delivery.",
+      };
+    }
+
     return {
       error: error.message,
     };

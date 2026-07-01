@@ -7,9 +7,18 @@ export type ReleaseNote = {
 
 export const appRelease = {
   name: "PayEngine",
-  version: "1.2.7",
+  version: "1.2.8",
   releasedOn: "2026-07-01",
   releaseNotes: [
+    {
+      version: "1.2.8",
+      releasedOn: "2026-07-01",
+      summary: "Password reset rate-limit handling update.",
+      changes: [
+        "Matched the forgot-password cooldown to Supabase's 60-second resend window.",
+        "Added a rate-limit-specific error message that recommends waiting or configuring custom SMTP.",
+      ],
+    },
     {
       version: "1.2.7",
       releasedOn: "2026-07-01",
