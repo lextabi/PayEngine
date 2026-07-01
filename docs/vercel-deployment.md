@@ -42,6 +42,7 @@ In Supabase Dashboard > Authentication > URL Configuration:
    - `https://<your-production-domain>/signup`
    - `https://<your-production-domain>/verify-email`
    - `https://<your-production-domain>/dashboard`
+   - `https://<your-production-domain>/auth/confirm`
 
 ## 5. Deploy and verify
 
@@ -58,14 +59,20 @@ After first deploy, verify:
 6. Dashboard shows source links and updated-as-of message.
 7. PDF/Excel export works.
 
-## 6. Launch safety checks
+## 7. Auth email delivery notes
+
+1. If password reset or signup emails do not arrive, check whether Supabase is using its default email service.
+2. The default Supabase email service has low throughput and is best-effort only; configure custom SMTP for production reliability.
+3. Password reset links must use an allowed redirect URL such as `/auth/confirm` before landing on `/reset-password`.
+
+## 8. Launch safety checks
 
 1. Confirm no sensitive values are committed in repository.
 2. Confirm service role key exists only in server-side env vars.
 3. Confirm production domain is HTTPS.
 4. Confirm app and Supabase project use matching region expectations.
 
-## 7. Rollback plan
+## 9. Rollback plan
 
 1. Keep previous successful Vercel deployment ready for instant rollback.
 2. If auth issues occur, first check `NEXT_PUBLIC_APP_URL` and Supabase redirect URLs.

@@ -83,7 +83,7 @@ Open `http://localhost:3000`.
    - `DIRECT_URL`
 5. In Supabase Auth URL Configuration:
    - Set Site URL to your Vercel production URL.
-   - Add redirect URLs for `/login`, `/signup`, `/verify-email`, and `/dashboard`.
+   - Add redirect URLs for `/login`, `/signup`, `/verify-email`, `/dashboard`, and `/auth/confirm`.
 6. Trigger deploy in Vercel.
 7. Run post-deploy checks from `docs/vercel-deployment.md`.
 
