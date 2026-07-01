@@ -34,6 +34,22 @@ export function ResetPasswordForm() {
 
     const initialize = async () => {
       const supabase = createSupabaseBrowserClient();
+      const currentUrl = new URL(window.location.href);
+      const recoveryCode = currentUrl.searchParams.get("code");
+
+      if (recoveryCode) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(recoveryCode);
+
+        if (exchangeError && mounted) {
+          setError("The recovery link could not be verified. Please request a new one.");
+          setIsReady(true);
+          return;
+        }
+
+        currentUrl.searchParams.delete("code");
+        window.history.replaceState({}, document.title, currentUrl.toString());
+      }
+
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -59,13 +75,18 @@ export function ResetPasswordForm() {
     setIsSubmitting(true);
 
     try {
+      if (!isRecoverySession) {
+        setError("Open the password reset link from your email again to continue.");
+        return;
+      }
+
       const supabase = createSupabaseBrowserClient();
       const { error: updateError } = await supabase.auth.updateUser({
         password: values.newPassword,
       });
 
       if (updateError) {
-        setError(updateError.message);
+        setError(updateError.message || "Failed to update password.");
         return;
       }
 
@@ -96,7 +117,7 @@ export function ResetPasswordForm() {
       <CardContent className="space-y-4 p-6 sm:p-8">
         <p className="text-sm text-muted-foreground">{helperMessage}</p>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} noValidate className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="newPassword" className="text-sm font-medium">
               New Password
