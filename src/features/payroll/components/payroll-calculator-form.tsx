@@ -67,52 +67,99 @@ export function PayrollCalculatorForm({
     setExporting("excel");
 
     try {
-      const XLSX = await import("xlsx");
+      const XLSX = await import("xlsx-js-style");
       const preview = result.preview;
-      const rows: Array<Array<string | number>> = [
-        ["PayEngine Payroll Preview"],
-        ["Generated At", new Date().toISOString()],
-        [],
-        ["Profile"],
+
+      const rows: Array<[string | number | null, string | number | null]> = [
+        ["PayEngine Payroll Preview", null],
+        ["Generated At", new Date().toLocaleString()],
+        [null, null],
+        ["Profile", null],
         ["Label", preview.profile.label],
-        ["Monthly Salary", preview.profile.monthlySalary],
-        [],
-        ["Rates"],
-        ["Daily Rate", preview.rates.dailyRate],
-        ["Hourly Rate", preview.rates.hourlyRate],
-        ["Minute Rate", preview.rates.minuteRate],
-        [],
-        ["Earnings"],
-        ["Base Pay", preview.earnings.periodBasePay],
-        ["Overtime", preview.earnings.overtimePay],
-        ["Night Differential", preview.earnings.nightDifferentialPay],
-        ["Holiday Pay", preview.earnings.holidayPay],
-        ["Rest Day", preview.earnings.restDayPay],
-        ["Bonuses", preview.earnings.bonuses],
-        ["Incentives", preview.earnings.incentives],
-        ["Recurring Allowances", preview.earnings.recurringAllowanceTotal],
-        ["Ad Hoc Allowances", preview.earnings.adHocAllowances],
-        ["Gross Pay", preview.earnings.grossPay],
-        [],
-        ["Deductions & Contributions"],
-        ["Absences", preview.deductions.absenceDeduction],
-        ["Tardiness", preview.deductions.tardinessDeduction],
-        ["Loans", preview.deductions.recurringLoanTotal + preview.deductions.adHocLoans],
-        ["Cash Advances", preview.deductions.recurringCashAdvanceTotal + preview.deductions.adHocCashAdvances],
-        ["Other Deductions", preview.deductions.recurringOtherDeductionTotal],
-        ["SSS", preview.government.sss],
-        ["PhilHealth", preview.government.philHealth],
-        ["Pag-IBIG", preview.government.pagIbig],
-        ["Tax", preview.government.tax],
-        ["Net Pay", preview.netPay],
+        ["Monthly Salary", exportCurrency(preview.profile.monthlySalary)],
+        [null, null],
+        ["Rates", null],
+        ["Daily Rate", exportCurrency(preview.rates.dailyRate)],
+        ["Hourly Rate", exportCurrency(preview.rates.hourlyRate)],
+        ["Minute Rate", exportCurrency(preview.rates.minuteRate)],
+        [null, null],
+        ["Earnings", null],
+        ["Base Pay", exportCurrency(preview.earnings.periodBasePay)],
+        ["Overtime", exportCurrency(preview.earnings.overtimePay)],
+        ["Night Differential", exportCurrency(preview.earnings.nightDifferentialPay)],
+        ["Regular Holiday", exportCurrency(preview.earnings.regularHolidayPay)],
+        ["Special Holiday", exportCurrency(preview.earnings.specialHolidayPay)],
+        ["Company Holiday", exportCurrency(preview.earnings.companyHolidayPay)],
+        ["Holiday Pay", exportCurrency(preview.earnings.holidayPay)],
+        ["Rest Day", exportCurrency(preview.earnings.restDayPay)],
+        ["Bonuses", exportCurrency(preview.earnings.bonuses)],
+        ["Incentives", exportCurrency(preview.earnings.incentives)],
+        ["Recurring Allowances", exportCurrency(preview.earnings.recurringAllowanceTotal)],
+        ["Ad Hoc Allowances", exportCurrency(preview.earnings.adHocAllowances)],
+        ["Gross Pay", exportCurrency(preview.earnings.grossPay)],
+        [null, null],
+        ["Deductions & Contributions", null],
+        ["Absences", exportCurrency(preview.deductions.absenceDeduction)],
+        ["Tardiness", exportCurrency(preview.deductions.tardinessDeduction)],
+        ["Loans", exportCurrency(preview.deductions.recurringLoanTotal + preview.deductions.adHocLoans)],
+        ["Cash Advances", exportCurrency(preview.deductions.recurringCashAdvanceTotal + preview.deductions.adHocCashAdvances)],
+        ["Other Deductions", exportCurrency(preview.deductions.recurringOtherDeductionTotal)],
+        ["SSS", exportCurrency(preview.government.sss)],
+        ["PhilHealth", exportCurrency(preview.government.philHealth)],
+        ["Pag-IBIG", exportCurrency(preview.government.pagIbig)],
+        ["Tax", exportCurrency(preview.government.tax)],
+        ["Net Pay", exportCurrency(preview.netPay)],
       ];
 
       if (preview.warnings.length > 0) {
-        rows.push([], ["Warnings"]);
-        preview.warnings.forEach((warning) => rows.push([warning]));
+        rows.push([null, null], ["Warnings", null]);
+        preview.warnings.forEach((warning) => rows.push([warning, null]));
       }
 
       const worksheet = XLSX.utils.aoa_to_sheet(rows);
+      worksheet["!cols"] = computeExcelColumnWidths(rows);
+
+      const headerRows = new Set([1, 4, 8, 13, 29]);
+      const warningHeaderRow = preview.warnings.length > 0 ? rows.findIndex((row) => row[0] === "Warnings") + 1 : -1;
+
+      const range = XLSX.utils.decode_range(worksheet["!ref"] ?? "A1:B1");
+      for (let rowIndex = range.s.r; rowIndex <= range.e.r; rowIndex += 1) {
+        const currentRowNumber = rowIndex + 1;
+        for (let colIndex = range.s.c; colIndex <= range.e.c; colIndex += 1) {
+          const cellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
+          const cell = worksheet[cellAddress];
+
+          if (!cell) {
+            continue;
+          }
+
+          const isHeaderRow = headerRows.has(currentRowNumber) || currentRowNumber === warningHeaderRow;
+
+          cell.s = {
+            font: {
+              bold: isHeaderRow,
+              sz: isHeaderRow ? 12 : 10,
+              color: { rgb: "111827" },
+            },
+            fill: {
+              patternType: "solid",
+              fgColor: { rgb: isHeaderRow ? "E5E7EB" : "FFFFFF" },
+            },
+            border: {
+              top: { style: "thin", color: { rgb: "D4D4D8" } },
+              bottom: { style: "thin", color: { rgb: "D4D4D8" } },
+              left: { style: "thin", color: { rgb: "D4D4D8" } },
+              right: { style: "thin", color: { rgb: "D4D4D8" } },
+            },
+            alignment: {
+              vertical: "center",
+              horizontal: colIndex === 1 ? "right" : "left",
+              wrapText: true,
+            },
+          };
+        }
+      }
+
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Payroll Preview");
 
@@ -159,45 +206,48 @@ export function PayrollCalculatorForm({
       addLine("Profile");
       doc.setFontSize(10);
       addLine("Label", preview.profile.label);
-      addLine("Monthly Salary", formatCurrency(preview.profile.monthlySalary));
+      addLine("Monthly Salary", exportCurrency(preview.profile.monthlySalary));
       y += 8;
 
       doc.setFontSize(12);
       addLine("Rates");
       doc.setFontSize(10);
-      addLine("Daily Rate", formatCurrency(preview.rates.dailyRate));
-      addLine("Hourly Rate", formatCurrency(preview.rates.hourlyRate));
-      addLine("Minute Rate", formatCurrency(preview.rates.minuteRate));
+      addLine("Daily Rate", exportCurrency(preview.rates.dailyRate));
+      addLine("Hourly Rate", exportCurrency(preview.rates.hourlyRate));
+      addLine("Minute Rate", exportCurrency(preview.rates.minuteRate));
       y += 8;
 
       doc.setFontSize(12);
       addLine("Earnings");
       doc.setFontSize(10);
-      addLine("Base Pay", formatCurrency(preview.earnings.periodBasePay));
-      addLine("Overtime", formatCurrency(preview.earnings.overtimePay));
-      addLine("Night Differential", formatCurrency(preview.earnings.nightDifferentialPay));
-      addLine("Holiday Pay", formatCurrency(preview.earnings.holidayPay));
-      addLine("Rest Day", formatCurrency(preview.earnings.restDayPay));
-      addLine("Bonuses", formatCurrency(preview.earnings.bonuses));
-      addLine("Incentives", formatCurrency(preview.earnings.incentives));
-      addLine("Recurring Allowances", formatCurrency(preview.earnings.recurringAllowanceTotal));
-      addLine("Ad Hoc Allowances", formatCurrency(preview.earnings.adHocAllowances));
-      addLine("Gross Pay", formatCurrency(preview.earnings.grossPay));
+      addLine("Base Pay", exportCurrency(preview.earnings.periodBasePay));
+      addLine("Overtime", exportCurrency(preview.earnings.overtimePay));
+      addLine("Night Differential", exportCurrency(preview.earnings.nightDifferentialPay));
+      addLine("Regular Holiday", exportCurrency(preview.earnings.regularHolidayPay));
+      addLine("Special Holiday", exportCurrency(preview.earnings.specialHolidayPay));
+      addLine("Company Holiday", exportCurrency(preview.earnings.companyHolidayPay));
+      addLine("Holiday Pay", exportCurrency(preview.earnings.holidayPay));
+      addLine("Rest Day", exportCurrency(preview.earnings.restDayPay));
+      addLine("Bonuses", exportCurrency(preview.earnings.bonuses));
+      addLine("Incentives", exportCurrency(preview.earnings.incentives));
+      addLine("Recurring Allowances", exportCurrency(preview.earnings.recurringAllowanceTotal));
+      addLine("Ad Hoc Allowances", exportCurrency(preview.earnings.adHocAllowances));
+      addLine("Gross Pay", exportCurrency(preview.earnings.grossPay));
       y += 8;
 
       doc.setFontSize(12);
       addLine("Deductions and Contributions");
       doc.setFontSize(10);
-      addLine("Absences", formatCurrency(preview.deductions.absenceDeduction));
-      addLine("Tardiness", formatCurrency(preview.deductions.tardinessDeduction));
-      addLine("Loans", formatCurrency(preview.deductions.recurringLoanTotal + preview.deductions.adHocLoans));
-      addLine("Cash Advances", formatCurrency(preview.deductions.recurringCashAdvanceTotal + preview.deductions.adHocCashAdvances));
-      addLine("Other Deductions", formatCurrency(preview.deductions.recurringOtherDeductionTotal));
-      addLine("SSS", formatCurrency(preview.government.sss));
-      addLine("PhilHealth", formatCurrency(preview.government.philHealth));
-      addLine("Pag-IBIG", formatCurrency(preview.government.pagIbig));
-      addLine("Tax", formatCurrency(preview.government.tax));
-      addLine("Net Pay", formatCurrency(preview.netPay));
+      addLine("Absences", exportCurrency(preview.deductions.absenceDeduction));
+      addLine("Tardiness", exportCurrency(preview.deductions.tardinessDeduction));
+      addLine("Loans", exportCurrency(preview.deductions.recurringLoanTotal + preview.deductions.adHocLoans));
+      addLine("Cash Advances", exportCurrency(preview.deductions.recurringCashAdvanceTotal + preview.deductions.adHocCashAdvances));
+      addLine("Other Deductions", exportCurrency(preview.deductions.recurringOtherDeductionTotal));
+      addLine("SSS", exportCurrency(preview.government.sss));
+      addLine("PhilHealth", exportCurrency(preview.government.philHealth));
+      addLine("Pag-IBIG", exportCurrency(preview.government.pagIbig));
+      addLine("Tax", exportCurrency(preview.government.tax));
+      addLine("Net Pay", exportCurrency(preview.netPay));
 
       if (preview.warnings.length > 0) {
         y += 8;
@@ -463,6 +513,24 @@ function TaxLine({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-sm font-medium">{value}</p>
     </div>
   );
+}
+
+function exportCurrency(value: number | string) {
+  return `PHP ${Number(value).toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function computeExcelColumnWidths(rows: Array<[string | number | null, string | number | null]>) {
+  const widths = [0, 0];
+
+  rows.forEach(([label, value]) => {
+    widths[0] = Math.max(widths[0], label?.toString().length ?? 0);
+    widths[1] = Math.max(widths[1], value?.toString().length ?? 0);
+  });
+
+  return widths.map((width) => ({ wch: Math.min(Math.max(width + 4, 18), 46) }));
 }
 
 const inputClassName =

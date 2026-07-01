@@ -110,7 +110,7 @@ export function AppShell({ children, user }: AppShellProps) {
               <div
                 className={cn(
                   "overflow-hidden transition-all duration-300 ease-out",
-                  sidebarCollapsed ? "max-w-0 opacity-0" : "max-w-[180px] opacity-100",
+                  sidebarCollapsed ? "w-0 opacity-0" : "w-[180px] opacity-100",
                 )}
               >
                 <div>
@@ -152,10 +152,10 @@ export function AppShell({ children, user }: AppShellProps) {
                 <div
                   className={cn(
                     "min-w-0 overflow-hidden transition-all duration-300 ease-out",
-                    sidebarCollapsed ? "max-w-0 opacity-0" : "max-w-[180px] opacity-100",
+                    sidebarCollapsed ? "w-0 opacity-0" : "w-full opacity-100",
                   )}
                 >
-                  <div className="min-w-0">
+                  <div className="min-w-0 overflow-hidden">
                     <p className="truncate text-sm font-medium">{userName}</p>
                     <p className="text-sidebar-foreground/70 truncate text-xs">{user.email}</p>
                   </div>
@@ -189,14 +189,11 @@ export function AppShell({ children, user }: AppShellProps) {
                     <span
                       className={cn(
                         "overflow-hidden whitespace-nowrap transition-all duration-300 ease-out",
-                        sidebarCollapsed ? "max-w-0 opacity-0" : "max-w-[120px] opacity-100",
+                        sidebarCollapsed ? "w-0 opacity-0" : "w-auto opacity-100",
                       )}
                     >
                       {item.label}
                     </span>
-                    {sidebarCollapsed ? (
-                      <span className="text-xs">{item.label.slice(0, 1)}</span>
-                    ) : null}
                     {!sidebarCollapsed && item.comingSoon ? (
                       <span className={cn("ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide", isActive ? "bg-sidebar-primary-foreground/18 text-sidebar-primary-foreground" : "bg-sidebar-accent text-sidebar-foreground")}>Soon</span>
                     ) : null}

@@ -7,9 +7,20 @@ export type ReleaseNote = {
 
 export const appRelease = {
   name: "PayEngine",
-  version: "1.2.1",
+  version: "1.2.2",
   releasedOn: "2026-07-01",
   releaseNotes: [
+    {
+      version: "1.2.2",
+      releasedOn: "2026-07-01",
+      summary: "Export formatting and sidebar polish update.",
+      changes: [
+        "Fixed PDF export currency display to use a safe PHP text format.",
+        "Added Excel borders, section styling, and auto-fit column widths for payroll exports.",
+        "Removed collapsed sidebar letter fallback so minimized navigation is icon-only.",
+        "Constrained collapsed email/profile content to prevent overflow outside the sidebar card.",
+      ],
+    },
     {
       version: "1.2.1",
       releasedOn: "2026-07-01",
