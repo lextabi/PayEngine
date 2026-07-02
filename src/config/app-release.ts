@@ -17,7 +17,7 @@ export const appRelease = {
       changes: [
         "Added Save to My History from payroll preview with required payroll period selection.",
         "Added My History data persistence and salary trend visualization (net pay vs deductions).",
-        "Added duplicate-period conflict handling with Update Existing Record and Overwrite Existing Record options.",
+        "Added duplicate-period conflict handling with a clear Overwrite Existing Record option.",
       ],
     },
     {

@@ -23,24 +23,29 @@ export function PayrollHistoryChart({ items }: PayrollHistoryChartProps) {
   const maxValue = items.reduce((max, item) => {
     return Math.max(max, item.netPay, item.totalDeductions);
   }, 1);
+  const chartLaneHeightPx = 112;
 
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {items.map((item) => {
-          const netPayHeight = Math.max((item.netPay / maxValue) * 100, 2);
-          const deductionsHeight = Math.max((item.totalDeductions / maxValue) * 100, 2);
+          const netPayHeight = Math.max((item.netPay / maxValue) * chartLaneHeightPx, 4);
+          const deductionsHeight = Math.max((item.totalDeductions / maxValue) * chartLaneHeightPx, 4);
 
           return (
             <div key={item.id} className="rounded-2xl border border-border/70 bg-card/60 p-4">
               <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{item.periodLabel}</p>
-              <div className="mt-4 grid h-40 grid-cols-2 items-end gap-4 rounded-xl border border-border/60 bg-background/70 px-3 pb-3 pt-2">
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-full rounded-t-md bg-emerald-500/80" style={{ height: `${netPayHeight}%` }} />
+              <div className="mt-4 grid grid-cols-2 gap-4 rounded-xl border border-border/60 bg-background/70 p-3">
+                <div className="space-y-2">
+                  <div className="flex h-32 items-end rounded-md border border-border/40 bg-muted/20 p-2">
+                    <div className="w-full rounded-t-md bg-emerald-500/80" style={{ height: `${netPayHeight}px` }} />
+                  </div>
                   <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Net Pay</p>
                 </div>
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-full rounded-t-md bg-rose-500/80" style={{ height: `${deductionsHeight}%` }} />
+                <div className="space-y-2">
+                  <div className="flex h-32 items-end rounded-md border border-border/40 bg-muted/20 p-2">
+                    <div className="w-full rounded-t-md bg-rose-500/80" style={{ height: `${deductionsHeight}px` }} />
+                  </div>
                   <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Deductions</p>
                 </div>
               </div>

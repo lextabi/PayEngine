@@ -11,7 +11,7 @@ const payrollPeriodSchema = z
 export const savePayrollRunSchema = z.object({
   payrollPeriod: payrollPeriodSchema,
   calculatorInput: payrollCalculatorSchema,
-  conflictStrategy: z.enum(["ASK", "UPDATE", "OVERWRITE"]).default("ASK"),
+  conflictStrategy: z.enum(["ASK", "OVERWRITE"]).default("ASK"),
 });
 
 export type SavePayrollRunInput = z.infer<typeof savePayrollRunSchema>;

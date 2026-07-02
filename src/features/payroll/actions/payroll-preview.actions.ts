@@ -21,7 +21,7 @@ export type PayrollPreviewActionResult =
 export type SavePayrollRunActionResult =
   | {
       success: true;
-      status: "CREATED" | "UPDATED";
+      status: "CREATED" | "OVERWRITTEN";
       savedRun: {
         id: string;
         payrollPeriod: string;
@@ -71,7 +71,7 @@ export async function calculatePayrollPreviewAction(
 export async function savePayrollRunAction(values: {
   payrollPeriod: string;
   calculatorInput: PayrollCalculatorInput;
-  conflictStrategy?: "ASK" | "UPDATE" | "OVERWRITE";
+  conflictStrategy?: "ASK" | "OVERWRITE";
 }): Promise<SavePayrollRunActionResult> {
   const parsed = savePayrollRunSchema.safeParse(values);
 

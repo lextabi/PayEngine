@@ -77,10 +77,10 @@ function buildPeriodKey(payrollPeriodDate: Date, payFrequency: PayrollPayFrequen
   return `W-${isoYear}-${`${isoWeek}`.padStart(2, "0")}`;
 }
 
-type ConflictStrategy = "ASK" | "UPDATE" | "OVERWRITE";
+type ConflictStrategy = "ASK" | "OVERWRITE";
 
 type SavedPayrollRunResult = {
-  status: "CREATED" | "UPDATED";
+  status: "CREATED" | "OVERWRITTEN";
   id: string;
   payrollPeriod: string;
   payFrequency: PayrollPayFrequency;
@@ -104,9 +104,9 @@ function mapSavedRunResult(run: {
   payrollPeriod: Date;
   payFrequency: PayrollPayFrequency;
   netPay: Prisma.Decimal;
-}): SavedPayrollRunResult {
+}, status: SavedPayrollRunResult["status"] = "CREATED"): SavedPayrollRunResult {
   return {
-    status: "CREATED",
+    status,
     id: run.id,
     payrollPeriod: run.payrollPeriod.toISOString(),
     payFrequency: run.payFrequency,
@@ -175,24 +175,7 @@ export async function savePayrollRun(params: {
       data: saveData,
     });
 
-    return mapSavedRunResult(created);
-  }
-
-  if (existing) {
-    const updated = await prisma.payrollRun.update({
-      where: {
-        id: existing.id,
-      },
-      data: saveData,
-    });
-
-    return {
-      status: "UPDATED",
-      id: updated.id,
-      payrollPeriod: updated.payrollPeriod.toISOString(),
-      payFrequency: updated.payFrequency,
-      netPay: toNumber(updated.netPay),
-    };
+    return mapSavedRunResult(created, "OVERWRITTEN");
   }
 
   const created = await prisma.payrollRun.create({

@@ -90,7 +90,7 @@ export function PayrollCalculatorForm({
     });
   };
 
-  const handleResolveDuplicate = (strategy: "UPDATE" | "OVERWRITE") => {
+  const handleResolveDuplicate = () => {
     if (!result?.success || !lastCalculatedInput) {
       return;
     }
@@ -99,7 +99,7 @@ export function PayrollCalculatorForm({
       const response = await savePayrollRunAction({
         payrollPeriod,
         calculatorInput: lastCalculatedInput,
-        conflictStrategy: strategy,
+        conflictStrategy: "OVERWRITE",
       });
 
       setSaveResult(response);
@@ -419,7 +419,7 @@ export function PayrollCalculatorForm({
                 </p>
                 {saveResult?.success ? (
                   <p className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-800 dark:text-emerald-200">
-                    {saveResult.status === "UPDATED" ? "Updated" : "Saved"} for payroll period {new Date(saveResult.savedRun.payrollPeriod).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}.
+                    {saveResult.status === "OVERWRITTEN" ? "Overwritten" : "Saved"} for payroll period {new Date(saveResult.savedRun.payrollPeriod).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}.
                   </p>
                 ) : null}
                 {saveResult && !saveResult.success && saveResult.error !== "DUPLICATE_PAYROLL_PERIOD" ? (
@@ -436,24 +436,15 @@ export function PayrollCalculatorForm({
                       <Button
                         type="button"
                         size="sm"
-                        variant="secondary"
-                        disabled={isSaving}
-                        onClick={() => handleResolveDuplicate("UPDATE")}
-                      >
-                        {isSaving ? "Updating..." : "Update Existing Record"}
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
                         variant="outline"
                         disabled={isSaving}
-                        onClick={() => handleResolveDuplicate("OVERWRITE")}
+                        onClick={handleResolveDuplicate}
                       >
                         {isSaving ? "Overwriting..." : "Overwrite Existing Record"}
                       </Button>
                     </div>
                     <p className="text-[11px] text-amber-700 dark:text-amber-300">
-                      Update keeps the same saved record. Overwrite replaces it with a new record timestamp.
+                      Overwrite replaces the existing saved record for this payroll period and frequency.
                     </p>
                   </div>
                 ) : null}
