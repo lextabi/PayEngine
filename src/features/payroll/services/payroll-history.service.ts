@@ -1,4 +1,4 @@
-import { PayFrequency, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
 import type { PayrollCalculatorInput } from "@/features/payroll/schema/payroll-calculator.schema";
@@ -20,6 +20,8 @@ type PayrollPreview = {
   };
   netPay: number;
 };
+
+type PayrollPayFrequency = "MONTHLY" | "SEMI_MONTHLY" | "WEEKLY";
 
 type PayrollRunSnapshot = {
   calculatorInput: PayrollCalculatorInput;
@@ -58,7 +60,7 @@ function getIsoWeekParts(value: Date) {
   };
 }
 
-function buildPeriodKey(payrollPeriodDate: Date, payFrequency: PayFrequency) {
+function buildPeriodKey(payrollPeriodDate: Date, payFrequency: PayrollPayFrequency) {
   const year = payrollPeriodDate.getUTCFullYear();
   const month = `${payrollPeriodDate.getUTCMonth() + 1}`.padStart(2, "0");
 
@@ -81,7 +83,7 @@ type SavedPayrollRunResult = {
   status: "CREATED" | "UPDATED";
   id: string;
   payrollPeriod: string;
-  payFrequency: PayFrequency;
+  payFrequency: PayrollPayFrequency;
   netPay: number;
 };
 
@@ -90,7 +92,7 @@ type DuplicatePayrollRunResult = {
   duplicate: {
     id: string;
     payrollPeriod: string;
-    payFrequency: PayFrequency;
+    payFrequency: PayrollPayFrequency;
     netPay: number;
   };
 };
@@ -100,7 +102,7 @@ type SavePayrollRunResult = SavedPayrollRunResult | DuplicatePayrollRunResult;
 function mapSavedRunResult(run: {
   id: string;
   payrollPeriod: Date;
-  payFrequency: PayFrequency;
+  payFrequency: PayrollPayFrequency;
   netPay: Prisma.Decimal;
 }): SavedPayrollRunResult {
   return {
@@ -115,7 +117,7 @@ function mapSavedRunResult(run: {
 export async function savePayrollRun(params: {
   userId: string;
   payrollPeriod: string;
-  payFrequency: PayFrequency;
+  payFrequency: PayrollPayFrequency;
   preview: PayrollPreview;
   calculatorInput: PayrollCalculatorInput;
   conflictStrategy: ConflictStrategy;
@@ -204,7 +206,7 @@ export async function getPayrollHistory(params: {
   userId: string;
   from?: string;
   to?: string;
-  payFrequency?: PayFrequency;
+  payFrequency?: PayrollPayFrequency;
   limit?: number;
 }) {
   const where: Prisma.PayrollRunWhereInput = {
