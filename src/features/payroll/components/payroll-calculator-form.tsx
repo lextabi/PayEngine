@@ -11,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import {
   calculatePayrollPreviewAction,
   type PayrollPreviewActionResult,
+  savePayrollRunAction,
+  type SavePayrollRunActionResult,
 } from "@/features/payroll/actions/payroll-preview.actions";
 import {
   defaultPayrollCalculatorValues,
@@ -37,6 +39,10 @@ export function PayrollCalculatorForm({
   const [result, setResult] = useState<PayrollPreviewActionResult | null>(null);
   const [isPending, startTransition] = useTransition();
   const [exporting, setExporting] = useState<"pdf" | "excel" | null>(null);
+  const [isSaving, startSavingTransition] = useTransition();
+  const [saveResult, setSaveResult] = useState<SavePayrollRunActionResult | null>(null);
+  const [lastCalculatedInput, setLastCalculatedInput] = useState<PayrollCalculatorInput | null>(null);
+  const [payrollPeriod, setPayrollPeriod] = useState(getTodayDateInputValue());
 
   const form = useForm<PayrollCalculatorInput>({
     resolver: zodResolver(payrollCalculatorSchema),
@@ -52,12 +58,53 @@ export function PayrollCalculatorForm({
 
   const onSubmit = form.handleSubmit((values) => {
     setResult(null);
+    setSaveResult(null);
 
     startTransition(async () => {
       const response = await calculatePayrollPreviewAction(values);
       setResult(response);
+
+      if (response.success) {
+        setLastCalculatedInput({ ...values });
+      } else {
+        setLastCalculatedInput(null);
+      }
     });
   });
+
+  const handleSaveRun = () => {
+    if (!result?.success || !lastCalculatedInput) {
+      return;
+    }
+
+    setSaveResult(null);
+
+    startSavingTransition(async () => {
+      const response = await savePayrollRunAction({
+        payrollPeriod,
+        calculatorInput: lastCalculatedInput,
+        conflictStrategy: "ASK",
+      });
+
+      setSaveResult(response);
+    });
+  };
+
+  const handleResolveDuplicate = (strategy: "UPDATE" | "OVERWRITE") => {
+    if (!result?.success || !lastCalculatedInput) {
+      return;
+    }
+
+    startSavingTransition(async () => {
+      const response = await savePayrollRunAction({
+        payrollPeriod,
+        calculatorInput: lastCalculatedInput,
+        conflictStrategy: strategy,
+      });
+
+      setSaveResult(response);
+    });
+  };
 
   const handleExcelExport = async () => {
     if (!result?.success) {
@@ -343,8 +390,20 @@ export function PayrollCalculatorForm({
                       Monthly salary basis: {formatCurrency(result.preview.profile.monthlySalary)}
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-end gap-2">
                     <Badge variant="outline">{formatCurrency(result.preview.netPay)}</Badge>
+                    <label className="space-y-1">
+                      <span className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Payroll Period</span>
+                      <input
+                        type="date"
+                        value={payrollPeriod}
+                        onChange={(event) => setPayrollPeriod(event.target.value)}
+                        className={inputClassName}
+                      />
+                    </label>
+                    <Button type="button" onClick={handleSaveRun} disabled={isSaving || exporting !== null || payrollPeriod.trim().length === 0}>
+                      {isSaving ? "Saving..." : "Save to My History"}
+                    </Button>
                     <Button type="button" variant="outline" onClick={handlePdfExport} disabled={exporting !== null}>
                       <Download className="mr-2 size-4" />
                       {exporting === "pdf" ? "Exporting PDF..." : "Export PDF"}
@@ -355,6 +414,49 @@ export function PayrollCalculatorForm({
                     </Button>
                   </div>
                 </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Preview first, then save this computed result when you are ready. Saved entries appear in My History.
+                </p>
+                {saveResult?.success ? (
+                  <p className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-800 dark:text-emerald-200">
+                    {saveResult.status === "UPDATED" ? "Updated" : "Saved"} for payroll period {new Date(saveResult.savedRun.payrollPeriod).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}.
+                  </p>
+                ) : null}
+                {saveResult && !saveResult.success && saveResult.error !== "DUPLICATE_PAYROLL_PERIOD" ? (
+                  <p className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                    {saveResult.error}
+                  </p>
+                ) : null}
+                {saveResult && !saveResult.success && saveResult.error === "DUPLICATE_PAYROLL_PERIOD" ? (
+                  <div className="mt-3 space-y-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+                    <p className="text-xs text-amber-800 dark:text-amber-200">
+                      A saved run already exists for this payroll period and frequency. Choose how to proceed.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={isSaving}
+                        onClick={() => handleResolveDuplicate("UPDATE")}
+                      >
+                        {isSaving ? "Updating..." : "Update Existing Record"}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={isSaving}
+                        onClick={() => handleResolveDuplicate("OVERWRITE")}
+                      >
+                        {isSaving ? "Overwriting..." : "Overwrite Existing Record"}
+                      </Button>
+                    </div>
+                    <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                      Update keeps the same saved record. Overwrite replaces it with a new record timestamp.
+                    </p>
+                  </div>
+                ) : null}
               </section>
 
               <PreviewGrid
@@ -531,6 +633,14 @@ function computeExcelColumnWidths(rows: Array<[string | number | null, string | 
   });
 
   return widths.map((width) => ({ wch: Math.min(Math.max(width + 4, 18), 46) }));
+}
+
+function getTodayDateInputValue() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = `${now.getMonth() + 1}`.padStart(2, "0");
+  const day = `${now.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 const inputClassName =

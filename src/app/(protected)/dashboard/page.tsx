@@ -103,7 +103,7 @@ export default async function DashboardPage() {
             <div className="rounded-2xl border border-dashed border-border/70 p-4">
               <p className="text-sm font-medium">Next workflow focus</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Save/reuse named calculator presets and add export history for personal financial planning.
+                Save finalized calculator previews and track net pay versus deductions in My History.
               </p>
             </div>
           </CardContent>

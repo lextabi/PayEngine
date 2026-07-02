@@ -7,9 +7,19 @@ export type ReleaseNote = {
 
 export const appRelease = {
   name: "PayEngine",
-  version: "1.2.8",
-  releasedOn: "2026-07-01",
+  version: "1.3.0",
+  releasedOn: "2026-07-02",
   releaseNotes: [
+    {
+      version: "1.3.0",
+      releasedOn: "2026-07-02",
+      summary: "My History save workflow and duplicate-period guardrails release.",
+      changes: [
+        "Added Save to My History from payroll preview with required payroll period selection.",
+        "Added My History data persistence and salary trend visualization (net pay vs deductions).",
+        "Added duplicate-period conflict handling with Update Existing Record and Overwrite Existing Record options.",
+      ],
+    },
     {
       version: "1.2.8",
       releasedOn: "2026-07-01",

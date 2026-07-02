@@ -23,6 +23,8 @@
 - Manual contribution override mode for SSS, PhilHealth, and Pag-IBIG
 - Automatic tax calculation from INCOME_TAX rule table
 - Payroll preview computation with year-aware government rule scoping
+- Save finalized payroll previews by payroll period into personal history
+- Salary pattern comparison using net pay versus total deductions trend views
 - Dashboard trust panel with official source links and last-updated messaging
 
 ## Non-goals

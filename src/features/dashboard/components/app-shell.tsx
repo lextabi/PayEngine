@@ -65,9 +65,9 @@ const navigationItems = [
   {
     href: "/reports",
     label: "My History",
-    description: "Saved previews and exports",
+    description: "Saved payroll periods and trends",
     icon: History,
-    comingSoon: true,
+    comingSoon: false,
   },
 ] as const;
 

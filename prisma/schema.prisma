@@ -82,6 +82,27 @@ model UserSetting {
   @@map("user_settings")
 }
 
+model PayrollRun {
+  id                 String       @id @default(uuid()) @db.Uuid
+  userId             String       @db.Uuid
+  payrollPeriod      DateTime
+  payFrequency       PayFrequency
+  periodKey          String
+  monthlySalaryBasis Decimal      @db.Decimal(12, 2)
+  grossPay           Decimal      @db.Decimal(12, 2)
+  totalDeductions    Decimal      @db.Decimal(12, 2)
+  totalContributions Decimal      @db.Decimal(12, 2)
+  totalTax           Decimal      @db.Decimal(12, 2)
+  netPay             Decimal      @db.Decimal(12, 2)
+  snapshot           Json
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@index([userId, payrollPeriod])
+  @@unique([userId, payFrequency, periodKey])
+  @@map("payroll_runs")
+}
+
 enum GovernmentAgency {
   BIR
   SSS
@@ -108,4 +129,10 @@ enum SettingValueType {
   NUMBER
   BOOLEAN
   JSON
+}
+
+enum PayFrequency {
+  MONTHLY
+  SEMI_MONTHLY
+  WEEKLY
 }

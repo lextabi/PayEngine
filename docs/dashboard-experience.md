@@ -13,7 +13,7 @@ The dashboard provides a personal workspace for signed-in users.
 - Tax explainability panel with table and sample bracket computation
 - Government contribution guide with sample monthly and semi-monthly computations
 - Accuracy and sources panel with official links and "updated as of" messaging
-- Placeholder reports route for future personal history/exports
+- My History module with saved payroll run list and net-pay vs deductions trend graph
 
 ## Notes
 

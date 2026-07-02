@@ -172,7 +172,7 @@ The application uses these core tables:
 - `/dashboard` - personal overview
 - `/payroll` - personal payroll calculator
 - `/settings` - personal salary and contribution controls
-- `/reports` - placeholder for personal export/history workflows
+- `/reports` - personal save history and salary pattern comparison
 
 ## Product Principles
 
