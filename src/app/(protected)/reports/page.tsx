@@ -43,7 +43,12 @@ export default async function ReportsPage() {
           </CardHeader>
           <CardContent>
             <PayrollHistoryChart
-              items={chartItems.map((item) => ({
+              items={chartItems.map((item: {
+                id: string;
+                payrollPeriod: string;
+                netPay: number;
+                totalDeductions: number;
+              }) => ({
                 id: item.id,
                 periodLabel: formatDate(item.payrollPeriod),
                 netPay: item.netPay,
