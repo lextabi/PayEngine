@@ -82,7 +82,15 @@ export default async function ReportsPage() {
                   <span>Net Pay</span>
                   <span>Saved At</span>
                 </div>
-                {history.map((item) => (
+                {history.map((item: {
+                  id: string;
+                  payrollPeriod: string;
+                  payFrequency: "MONTHLY" | "SEMI_MONTHLY" | "WEEKLY";
+                  grossPay: number;
+                  totalDeductions: number;
+                  netPay: number;
+                  createdAt: string;
+                }) => (
                   <div
                     key={item.id}
                     className="grid grid-cols-[1fr_0.9fr_1fr_1fr_1fr_0.95fr] gap-3 border-b border-border/60 px-4 py-3 text-sm last:border-b-0"
