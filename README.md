@@ -2,7 +2,7 @@
 
 PayEngine is a personal payroll calculator web app. Each user manages their own account, settings, and payroll simulations.
 
-## Stack
+### Stack
 
 - Next.js 16 (App Router)
 - React 19
@@ -15,7 +15,7 @@ PayEngine is a personal payroll calculator web app. Each user manages their own 
 - React Hook Form
 - Zod
 
-## Project Structure
+### Project Structure
 
 ```text
 src/
